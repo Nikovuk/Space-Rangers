@@ -3,19 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-[System.Serializable]
-public class InventorySlot
-{
-    public ItemInstance item;
-    public int amount;
-
-    public InventorySlot(ItemInstance item, int amount)
-    {
-        this.item = item;
-        this.amount = amount;
-    }
-}
-
 public class Inventory : MonoBehaviour
 {
     [SerializeField] public List<InventorySlot> slots;
@@ -74,5 +61,18 @@ public class Inventory : MonoBehaviour
         slots.Add(new InventorySlot(item, amount));
         onInventoryChanged?.Invoke();
         return amount;
+    }
+}
+
+[System.Serializable]
+public class InventorySlot
+{
+    public ItemInstance item;
+    public int amount;
+
+    public InventorySlot(ItemInstance item, int amount)
+    {
+        this.item = item;
+        this.amount = amount;
     }
 }
