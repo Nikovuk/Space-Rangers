@@ -154,7 +154,8 @@ MonoBehaviour:
   route: {fileID: 0}
   startFromPointA: 1
   arriveDistance: 4
-  waitAtPointSeconds: 1.5
+  waitAtPointSeconds: 10
+  useRouteAreaDetours: 1
   cruiseSpeed: 1300
   acceleration: 180
   brakingDistance: 40

@@ -9,6 +9,9 @@ public class NpcShipPatrol : MonoBehaviour
     [SerializeField] private float arriveDistance = 4f;
     [SerializeField] private float waitAtPointSeconds = 1.5f;
 
+    [Header("Path Shape")]
+    [SerializeField] private bool useRouteAreaDetours = true;
+
     [Header("Space Flight")]
     [SerializeField] private float cruiseSpeed = 30f;
     [SerializeField] private float acceleration = 18f;
@@ -21,6 +24,9 @@ public class NpcShipPatrol : MonoBehaviour
     private bool isWaiting;
     private float waitTimer;
 
+    private bool usingDetourTarget;
+    private Vector3 detourTarget;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -32,6 +38,11 @@ public class NpcShipPatrol : MonoBehaviour
         }
 
         targetIsPointA = !startFromPointA;
+    }
+
+    private void Start()
+    {
+        PrepareLegDetour();
     }
 
     private void FixedUpdate()
@@ -51,17 +62,25 @@ public class NpcShipPatrol : MonoBehaviour
             {
                 isWaiting = false;
                 targetIsPointA = !targetIsPointA;
+                PrepareLegDetour();
             }
 
             return;
         }
 
-        Vector3 targetPosition = route.GetPointPosition(targetIsPointA);
-        Vector3 toTarget = targetPosition - transform.position;
+        Vector3 finalTargetPosition = route.GetPointPosition(targetIsPointA);
+        Vector3 activeTarget = usingDetourTarget ? detourTarget : finalTargetPosition;
+        Vector3 toTarget = activeTarget - transform.position;
         float distance = toTarget.magnitude;
 
         if (distance <= arriveDistance)
         {
+            if (usingDetourTarget)
+            {
+                usingDetourTarget = false;
+                return;
+            }
+
             isWaiting = true;
             waitTimer = waitAtPointSeconds;
             return;
@@ -102,5 +121,25 @@ public class NpcShipPatrol : MonoBehaviour
         targetIsPointA = !startFromPointA;
         isWaiting = false;
         waitTimer = 0f;
+        usingDetourTarget = false;
+        PrepareLegDetour();
+    }
+
+    private void PrepareLegDetour()
+    {
+        if (!useRouteAreaDetours || route == null)
+        {
+            usingDetourTarget = false;
+            return;
+        }
+
+        if (route.TryGetRandomAreaPosition(out Vector3 areaTarget))
+        {
+            detourTarget = areaTarget;
+            usingDetourTarget = true;
+            return;
+        }
+
+        usingDetourTarget = false;
     }
 }

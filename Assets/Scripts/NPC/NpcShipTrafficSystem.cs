@@ -10,43 +10,114 @@ public class NpcShipTrafficSystem : MonoBehaviour
     [SerializeField] private bool includeInactiveRoutes = true;
 
     [Header("Spawn Settings")]
-    [SerializeField] private int shipsPerRoute = 2;
     [SerializeField] private float spawnOffsetRadius = 6f;
 
     private readonly List<NpcShipPatrol> spawnedShips = new List<NpcShipPatrol>();
     private readonly List<NpcShipRoute> runtimeRoutes = new List<NpcShipRoute>();
+    private readonly List<RouteSpawnState> routeSpawnStates = new List<RouteSpawnState>();
+
+    private class RouteSpawnState
+    {
+        public NpcShipRoute Route;
+        public float Timer;
+        public bool NextStartFromA = true;
+    }
 
     private void Start()
     {
-        SpawnTraffic();
+        InitializeRouteStates();
     }
 
-    private void SpawnTraffic()
+    private void Update()
     {
-        if (npcShipPrefab == null || shipsPerRoute <= 0)
+        if (npcShipPrefab == null)
         {
             return;
         }
 
-        BuildRuntimeRoutes();
-        if (runtimeRoutes.Count == 0)
+        for (int i = 0; i < routeSpawnStates.Count; i++)
         {
-            return;
-        }
-
-        for (int routeIndex = 0; routeIndex < runtimeRoutes.Count; routeIndex++)
-        {
-            NpcShipRoute route = runtimeRoutes[routeIndex];
-            for (int shipIndex = 0; shipIndex < shipsPerRoute; shipIndex++)
+            RouteSpawnState state = routeSpawnStates[i];
+            if (state.Route == null || !state.Route.IsValid)
             {
-                bool startFromA = shipIndex % 2 == 0;
-                Vector3 spawnPoint = route.GetPointPosition(startFromA);
-                Vector3 randomOffset = Random.insideUnitSphere * spawnOffsetRadius;
-
-                NpcShipPatrol ship = Instantiate(npcShipPrefab, spawnPoint + randomOffset, Quaternion.identity, transform);
-                ship.SetRoute(route, startFromA);
-                spawnedShips.Add(ship);
+                continue;
             }
+
+            state.Timer -= Time.deltaTime;
+            if (state.Timer > 0f)
+            {
+                continue;
+            }
+
+            int shipsToSpawn = state.Route.GetShipsToSpawn();
+            SpawnShipsForRoute(state, shipsToSpawn);
+            state.Timer = state.Route.GetNextSpawnDelay();
+        }
+    }
+
+    [ContextMenu("Respawn Traffic")]
+    public void RespawnTraffic()
+    {
+        ClearTraffic();
+        InitializeRouteStates();
+    }
+
+    [ContextMenu("Collect Routes From Root")]
+    public void CollectRoutesFromRoot()
+    {
+        if (routesRoot == null)
+        {
+            return;
+        }
+
+        NpcShipRoute[] foundRoutes = routesRoot.GetComponentsInChildren<NpcShipRoute>(includeInactiveRoutes);
+        if (foundRoutes == null || foundRoutes.Length == 0)
+        {
+            return;
+        }
+
+        routes.Clear();
+        for (int i = 0; i < foundRoutes.Length; i++)
+        {
+            if (foundRoutes[i] != null)
+            {
+                routes.Add(foundRoutes[i]);
+            }
+        }
+    }
+
+    private void InitializeRouteStates()
+    {
+        BuildRuntimeRoutes();
+        routeSpawnStates.Clear();
+
+        for (int i = 0; i < runtimeRoutes.Count; i++)
+        {
+            NpcShipRoute route = runtimeRoutes[i];
+            RouteSpawnState state = new RouteSpawnState
+            {
+                Route = route,
+                Timer = route.GetNextSpawnDelay(),
+                NextStartFromA = i % 2 == 0
+            };
+
+            routeSpawnStates.Add(state);
+        }
+    }
+
+    private void SpawnShipsForRoute(RouteSpawnState state, int shipsCount)
+    {
+        for (int shipIndex = 0; shipIndex < shipsCount; shipIndex++)
+        {
+            bool startFromA = state.NextStartFromA;
+            Vector3 spawnPoint = state.Route.GetPointPosition(startFromA);
+            Vector3 randomOffset = Random.insideUnitSphere * spawnOffsetRadius;
+
+            NpcShipPatrol ship = Instantiate(npcShipPrefab, spawnPoint + randomOffset, Quaternion.identity, transform);
+            ship.SetRoute(state.Route, startFromA);
+            spawnedShips.Add(ship);
+
+            state.NextStartFromA = !state.NextStartFromA;
         }
     }
 
