@@ -2,16 +2,25 @@ using UnityEngine;
 
 public class PlanetScript : MonoBehaviour
 {
+    [SerializeField] private StockMarketUI stockMarketUI;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void OnTriggerEnter(Collider other)
     {
+        if (!other.CompareTag("Player") || stockMarketUI == null)
+        {
+            return;
+        }
 
+        stockMarketUI.OpenPlanetShop();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnTriggerExit(Collider other)
     {
-        
+        if (!other.CompareTag("Player") || stockMarketUI == null)
+        {
+            return;
+        }
+
+        stockMarketUI.ClosePlanetShop();
     }
 }
