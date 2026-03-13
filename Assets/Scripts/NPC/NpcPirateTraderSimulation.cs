@@ -1,9 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class NpcPirateTraderSimulation : MonoBehaviour
 {
     [SerializeField] private PlanetEconomy planetEconomy;
     [SerializeField] private StockMarketManager stockMarketManager;
+
+    [Header("Pirate Stocks")]
+    [SerializeField] private List<string> pirateStockSymbols = new List<string> { "PIR" };
+    [SerializeField] private float pirateStockRiseOnTraderDestroyed = 0.02f;
+    [SerializeField] private float pirateStockDropOnPirateDestroyed = 0.03f;
 
     [Header("Loop")]
     [SerializeField] private float tickInterval = 1f;
@@ -17,7 +23,6 @@ public class NpcPirateTraderSimulation : MonoBehaviour
 
     [Header("Economy Impact")]
     [SerializeField] private float demandPenaltyPerDestroyedTrader = 0.01f;
-    [SerializeField] private float stockShockPerDestroyedTrader = 0.015f;
 
     private float tickTimer;
 
@@ -79,36 +84,55 @@ public class NpcPirateTraderSimulation : MonoBehaviour
                 pirate.ReceiveDamage(traderDps * dpsStep);
                 attacked++;
 
+                if (pirate == null || pirate.IsDestroyed)
+                {
+                    OnPirateDestroyed();
+                }
+
                 if (trader == null || trader.IsDestroyed)
                 {
-                    OnTraderDestroyed();
+                    OnTraderDestroyed(pirate);
                 }
             }
         }
     }
 
-    private void OnTraderDestroyed()
+    private void OnTraderDestroyed(NpcPirateShip pirate)
     {
         if (planetEconomy != null)
         {
             planetEconomy.demandModifier -= Mathf.Abs(demandPenaltyPerDestroyedTrader);
         }
 
-        if (stockMarketManager == null)
+        if (pirate != null)
+        {
+            pirate.ReturnToBase();
+        }
+
+        ApplyPirateStockImpact(Mathf.Abs(pirateStockRiseOnTraderDestroyed));
+    }
+
+    private void OnPirateDestroyed()
+    {
+        ApplyPirateStockImpact(-Mathf.Abs(pirateStockDropOnPirateDestroyed));
+    }
+
+    private void ApplyPirateStockImpact(float change)
+    {
+        if (stockMarketManager == null || pirateStockSymbols == null || pirateStockSymbols.Count == 0)
         {
             return;
         }
 
-        float multiplier = Mathf.Clamp01(1f - Mathf.Abs(stockShockPerDestroyedTrader));
-        for (int i = 0; i < stockMarketManager.stocks.Count; i++)
+        for (int i = 0; i < pirateStockSymbols.Count; i++)
         {
-            Stock stock = stockMarketManager.stocks[i];
+            Stock stock = stockMarketManager.GetStock(pirateStockSymbols[i]);
             if (stock == null)
             {
                 continue;
             }
 
-            stock.SetPrice(stock.currentPrice * multiplier);
+            stock.SetPrice(stock.currentPrice * (1f + change));
         }
 
         stockMarketManager.UpdatePrices();

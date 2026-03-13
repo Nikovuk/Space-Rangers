@@ -4,6 +4,9 @@ public class LaserScript : MonoBehaviour
 {
     public float speed = 60f;
     public int damage = 1;
+    public PlayerResources owner;
+    public float pirateRetaliationDamage = 2f;
+    public float traderRetaliationDamage = 1f;
 
     void Update()
     {
@@ -31,12 +34,35 @@ public class LaserScript : MonoBehaviour
     {
         if (other.CompareTag("Player")) return;
 
-        var Asteroid = other.GetComponent<AsteroidScript>();
-        if (Asteroid != null)
+        var asteroid = other.GetComponent<AsteroidScript>();
+        if (asteroid != null)
         {
-            Asteroid.TakeDamage(damage);
+            asteroid.TakeDamage(damage);
             return;
         }
+
+        NpcPirateShip pirate = other.GetComponent<NpcPirateShip>();
+        if (pirate != null)
+        {
+            pirate.ReceiveDamage(damage);
+            if (owner != null)
+            {
+                owner.ReceiveDamage(pirateRetaliationDamage);
+            }
+            return;
+        }
+
+        NpcTraderShip trader = other.GetComponent<NpcTraderShip>();
+        if (trader != null)
+        {
+            trader.ReceiveDamage(damage);
+            if (owner != null)
+            {
+                owner.ReceiveDamage(traderRetaliationDamage);
+            }
+            return;
+        }
+
         Destroy(gameObject);
     }
 }

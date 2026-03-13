@@ -65,6 +65,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3109503128313175802}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3782755783892278312}
   m_SourcePrefab: {fileID: 100100000, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
 --- !u!1 &8470776449735539295 stripped
 GameObject:
@@ -136,3 +139,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   patrol: {fileID: 6739081248720638811}
+--- !u!114 &3782755783892278312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8470776449735539295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f96be483c1048c94883cf40106378a3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pirateBase: {fileID: 0}
+  roamRadius: 120
+  moveSpeed: 18
+  turnSpeed: 4
+  arriveDistance: 6

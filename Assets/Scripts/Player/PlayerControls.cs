@@ -216,6 +216,11 @@ public class PlayerControls : MonoBehaviour
         {
             playerResources.SpendAmmo(ammoPerShot);
             GameObject laser = Instantiate(laserPrefab, firePoint.position, firePoint.rotation);
+            LaserScript laserScript = laser.GetComponent<LaserScript>();
+            if (laserScript != null)
+            {
+                laserScript.owner = playerResources;
+            }
         }
 
     }

@@ -2,11 +2,22 @@ using UnityEngine;
 
 public class PlayerResources : MonoBehaviour
 {
+    
+    [Header("Hull")]
+    public float maxHull = 100f;
+
     [Header("Resources")]
     public int credits = 0;
     public int ammo = 50;
     public float fuel = 100f;
     public int cargo = 0;
+
+    private float hull;
+
+    private void Awake()
+    {
+        hull = Mathf.Max(1f, maxHull);
+    }
 
     public bool SpendAmmo(int amount)
     {
@@ -36,5 +47,16 @@ public class PlayerResources : MonoBehaviour
         cargo = 0;
         credits += gained;
         return gained;
+    }
+
+    public void ReceiveDamage(float damage)
+    {
+        hull -= Mathf.Max(0f, damage);
+        if (hull > 0f)
+        {
+            return;
+        }
+
+        Destroy(gameObject);
     }
 }

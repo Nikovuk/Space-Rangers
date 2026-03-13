@@ -23,4 +23,18 @@ public class NpcPirateShip : MonoBehaviour
             patrol.ReceiveDamage(damage);
         }
     }
+
+    public void ReturnToBase()
+    {
+        if (patrol == null)
+        {
+            return;
+        }
+
+        NpcPirateRoamArea roam = patrol.GetComponent<NpcPirateRoamArea>();
+        if (roam != null)
+        {
+            roam.ReturnToBase();
+        }
+    }
 }
