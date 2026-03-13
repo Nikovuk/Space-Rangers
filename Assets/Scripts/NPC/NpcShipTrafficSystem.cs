@@ -11,11 +11,18 @@ public class NpcShipTrafficSystem : MonoBehaviour
 
     [Header("Spawn Settings")]
     [SerializeField] private float spawnOffsetRadius = 6f;
-
+    [Header("Convoys")]
+    [Range(1, 3)]
+    [SerializeField] private int maxConvoySize = 2;
     private readonly List<NpcShipPatrol> spawnedShips = new List<NpcShipPatrol>();
     private readonly List<NpcShipRoute> runtimeRoutes = new List<NpcShipRoute>();
     private readonly List<RouteSpawnState> routeSpawnStates = new List<RouteSpawnState>();
+    private int nextConvoyId = 1;
 
+    public List<NpcShipPatrol> GetSpawnedShips()
+    {
+        return spawnedShips;
+    }
     private class RouteSpawnState
     {
         public NpcShipRoute Route;
@@ -107,6 +114,9 @@ public class NpcShipTrafficSystem : MonoBehaviour
 
     private void SpawnShipsForRoute(RouteSpawnState state, int shipsCount)
     {
+        int convoySize = Mathf.Clamp(Random.Range(1, Mathf.Max(2, maxConvoySize + 1)), 1, shipsCount);
+        int convoyId = nextConvoyId++;
+
         for (int shipIndex = 0; shipIndex < shipsCount; shipIndex++)
         {
             bool startFromA = state.NextStartFromA;
@@ -115,11 +125,22 @@ public class NpcShipTrafficSystem : MonoBehaviour
 
             NpcShipPatrol ship = Instantiate(npcShipPrefab, spawnPoint + randomOffset, Quaternion.identity, transform);
             ship.SetRoute(state.Route, startFromA);
-            spawnedShips.Add(ship);
 
+            if (ship.GetComponent<NpcTraderShip>() == null)
+            {
+                ship.gameObject.AddComponent<NpcTraderShip>();
+            }
+
+            if (shipIndex < convoySize)
+            {
+                ship.SetConvoyId(convoyId);
+            }
+
+            spawnedShips.Add(ship);
             state.NextStartFromA = !state.NextStartFromA;
         }
     }
+
 
     private void BuildRuntimeRoutes()
     {

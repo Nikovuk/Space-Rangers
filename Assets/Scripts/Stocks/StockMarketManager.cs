@@ -49,6 +49,32 @@ public class StockMarketManager : MonoBehaviour
         Stock stock = GetStock(symbol);
         return stock != null && portfolio != null && portfolio.TrySell(symbol, stock.currentPrice, amount);
     }
+    public bool ApplyTraderTransfer(string sourceSymbol, string destinationSymbol, bool hasCargo)
+    {
+        if (!hasCargo)
+        {
+            return false;
+        }
+
+        Stock sourceStock = GetStock(sourceSymbol);
+        Stock destinationStock = GetStock(destinationSymbol);
+        if (sourceStock == null || destinationStock == null)
+        {
+            return false;
+        }
+
+        float sourceDelta = sourceStock.currentPrice * 0.1f;
+        sourceStock.SetPrice(sourceStock.currentPrice + sourceDelta);
+        destinationStock.SetPrice(destinationStock.currentPrice - sourceDelta * 1.02f);
+
+        OnPricesUpdated?.Invoke();
+        return true;
+    }
+    public float GetTraderPurchasePrice(string symbol)
+    {
+        Stock stock = GetStock(symbol);
+        return stock == null ? 0f : stock.currentPrice * 0.1f;
+    }
 
     public void UpdatePrices()
     {

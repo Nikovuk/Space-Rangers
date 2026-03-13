@@ -115,7 +115,8 @@ public class StockMarketUI : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Stock stock = marketManager.stocks[i];
-            rows[i].SetData(stock.symbol + " " + stock.currentPrice.ToString("F2"));
+            int shares = playerPortfolio == null ? 0 : playerPortfolio.GetShares(stock.symbol);
+            rows[i].SetData(stock.symbol + " " + stock.currentPrice.ToString("F2") + " | You: " + shares);
         }
     }
 

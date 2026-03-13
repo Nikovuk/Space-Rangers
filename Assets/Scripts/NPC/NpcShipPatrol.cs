@@ -19,6 +19,24 @@ public class NpcShipPatrol : MonoBehaviour
     [SerializeField] private float rotationSpeed = 4f;
     [SerializeField] private float maxSpeed = 40f;
 
+    [Header("Trading")]
+    [SerializeField] private StockMarketManager stockMarketManager;
+
+    [Header("Combat")]
+    [SerializeField] private float maxHull = 20f;
+    [SerializeField] private float escapeSpeedMultiplier = 1.25f;
+
+
+    private bool hasCargo = true;
+
+    private float hull;
+    private bool isDestroyed;
+    private float escapeTimer;
+    private int convoyId = -1;
+
+    public bool IsDestroyed => isDestroyed;
+    public NpcShipRoute CurrentRoute => route;
+    public int ConvoyId => convoyId;
     private Rigidbody rb;
     private bool targetIsPointA;
     private bool isWaiting;
@@ -37,6 +55,7 @@ public class NpcShipPatrol : MonoBehaviour
             maxSpeed = cruiseSpeed;
         }
 
+        hull = Mathf.Max(1f, maxHull);
         targetIsPointA = !startFromPointA;
     }
 
@@ -51,6 +70,11 @@ public class NpcShipPatrol : MonoBehaviour
         {
             rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, Vector3.zero, Time.fixedDeltaTime * 0.75f);
             return;
+        }
+
+        if (escapeTimer > 0f)
+        {
+            escapeTimer -= Time.fixedDeltaTime;
         }
 
         if (isWaiting)
@@ -95,7 +119,8 @@ public class NpcShipPatrol : MonoBehaviour
             speedFactor = Mathf.SmoothStep(0.1f, 1f, speedFactor);
         }
 
-        float desiredSpeed = cruiseSpeed * speedFactor;
+        float activeSpeedMultiplier = escapeTimer > 0f ? Mathf.Max(1f, escapeSpeedMultiplier) : 1f;
+        float desiredSpeed = cruiseSpeed * speedFactor * activeSpeedMultiplier;
         Vector3 desiredVelocity = direction * desiredSpeed;
 
         rb.linearVelocity = Vector3.MoveTowards(
@@ -113,6 +138,32 @@ public class NpcShipPatrol : MonoBehaviour
         Quaternion targetRotation = Quaternion.LookRotation(lookDirection, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
     }
+    public void SetConvoyId(int id)
+    {
+        convoyId = id;
+    }
+
+    public void TriggerEscape(float duration)
+    {
+        escapeTimer = Mathf.Max(escapeTimer, duration);
+    }
+
+    public void ReceiveDamage(float damage)
+    {
+        if (isDestroyed)
+        {
+            return;
+        }
+
+        hull -= Mathf.Max(0f, damage);
+        if (hull > 0f)
+        {
+            return;
+        }
+
+        isDestroyed = true;
+        Destroy(gameObject);
+    }
 
     public void SetRoute(NpcShipRoute newRoute, bool beginFromPointA)
     {
@@ -123,8 +174,37 @@ public class NpcShipPatrol : MonoBehaviour
         waitTimer = 0f;
         usingDetourTarget = false;
         PrepareLegDetour();
+        hasCargo = true;
     }
+    private void TryProcessTradeAtDestination()
+    {
+        if (stockMarketManager == null || route == null)
+        {
+            return;
+        }
 
+        bool destinationIsPointA = targetIsPointA;
+        bool destinationIsPointB = !destinationIsPointA;
+
+        if (destinationIsPointB && hasCargo)
+        {
+            if (!stockMarketManager.ApplyTraderTransfer(route.PointAStockSymbol, route.PointBStockSymbol, true))
+            {
+                return;
+            }
+
+            hasCargo = false;
+        }
+
+        if (destinationIsPointB && !hasCargo)
+        {
+            float buyPrice = stockMarketManager.GetTraderPurchasePrice(route.PointBStockSymbol);
+            if (buyPrice > 0f)
+            {
+                hasCargo = true;
+            }
+        }
+    }
     private void PrepareLegDetour()
     {
         if (!useRouteAreaDetours || route == null)
