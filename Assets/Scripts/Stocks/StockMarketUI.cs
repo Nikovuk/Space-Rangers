@@ -9,6 +9,7 @@ public class StockMarketUI : MonoBehaviour
     public PlayerPortfolio playerPortfolio;
     public TMP_Text marketText;
     public TMP_Text portfolioText;
+    public PlayerResources playerResources;
 
     [Header("Panels")]
     public GameObject stocksCornerPanel;
@@ -19,6 +20,9 @@ public class StockMarketUI : MonoBehaviour
     public StockMarketRowUI rowPrefab;
     [Min(1)] public int tradeAmount = 1;
     private readonly List<StockMarketRowUI> rows = new List<StockMarketRowUI>();
+
+    private bool planetTradeMode;
+
 
     private void OnEnable()
     {
@@ -41,6 +45,7 @@ public class StockMarketUI : MonoBehaviour
 
     public void OpenStockShop()
     {
+        planetTradeMode = false;
         if (stocksCornerPanel != null)
         {
             stocksCornerPanel.SetActive(false);
@@ -56,6 +61,7 @@ public class StockMarketUI : MonoBehaviour
 
     public void CloseStockShop()
     {
+        planetTradeMode = false;
         if (stockShopPanel != null)
         {
             stockShopPanel.SetActive(false);
@@ -65,6 +71,21 @@ public class StockMarketUI : MonoBehaviour
         {
             stocksCornerPanel.SetActive(true);
         }
+    }
+
+
+    public void OpenPlanetShop()
+    {
+        planetTradeMode = true;
+        OpenStockShop();
+        planetTradeMode = true;
+        Refresh();
+    }
+
+    public void ClosePlanetShop()
+    {
+        planetTradeMode = false;
+        CloseStockShop();
     }
 
     public void Refresh()
@@ -115,14 +136,41 @@ public class StockMarketUI : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Stock stock = marketManager.stocks[i];
-            int shares = playerPortfolio == null ? 0 : playerPortfolio.GetShares(stock.symbol);
-            rows[i].SetData(stock.symbol + " " + stock.currentPrice.ToString("F2") + " | You: " + shares);
+            if (planetTradeMode)
+            {
+                PlayerResources resources = ResolvePlayerResources();
+                int goods = resources == null ? 0 : resources.GetPlanetGoodsAmount(stock.symbol);
+                rows[i].SetData(stock.symbol + " " + stock.currentPrice.ToString("F2") + " | Cargo: " + goods + "/" + PlayerResources.MaxPlanetGoodsPerPlanet);
+            }
+            else
+            {
+                int shares = playerPortfolio == null ? 0 : playerPortfolio.GetShares(stock.symbol);
+                rows[i].SetData(stock.symbol + " " + stock.currentPrice.ToString("F2") + " | You: " + shares);
+            }
         }
     }
 
     private void Buy(string symbol)
     {
-        if (marketManager != null && playerPortfolio != null)
+        if (marketManager == null)
+        {
+            return;
+        }
+
+        if (planetTradeMode)
+        {
+            PlayerResources resources = ResolvePlayerResources();
+            Stock stock = marketManager.GetStock(symbol);
+            if (resources != null && stock != null)
+            {
+                resources.TryBuyPlanetGoods(symbol, stock.currentPrice, 1);
+                Refresh();
+            }
+
+            return;
+        }
+
+        if (playerPortfolio != null)
         {
             marketManager.TryBuy(playerPortfolio, symbol, tradeAmount);
             Refresh();
@@ -131,7 +179,25 @@ public class StockMarketUI : MonoBehaviour
 
     private void Sell(string symbol)
     {
-        if (marketManager != null && playerPortfolio != null)
+        if (marketManager == null)
+        {
+            return;
+        }
+
+        if (planetTradeMode)
+        {
+            PlayerResources resources = ResolvePlayerResources();
+            Stock stock = marketManager.GetStock(symbol);
+            if (resources != null && stock != null)
+            {
+                resources.TrySellPlanetGoods(symbol, stock.currentPrice, 1);
+                Refresh();
+            }
+
+            return;
+        }
+
+        if (playerPortfolio != null)
         {
             marketManager.TrySell(playerPortfolio, symbol, tradeAmount);
             Refresh();
@@ -160,6 +226,38 @@ public class StockMarketUI : MonoBehaviour
 
     private string BuildPortfolioText()
     {
+        if (planetTradeMode)
+        {
+            PlayerResources resources = ResolvePlayerResources();
+            if (resources == null)
+            {
+                return "No player resources connected.";
+            }
+
+            StringBuilder planetBuilder = new StringBuilder();
+            if (marketManager != null)
+            {
+                for (int i = 0; i < marketManager.stocks.Count; i++)
+                {
+                    Stock stock = marketManager.stocks[i];
+                    int goods = resources.GetPlanetGoodsAmount(stock.symbol);
+                    if (goods <= 0)
+                    {
+                        continue;
+                    }
+
+                    planetBuilder.Append(stock.symbol)
+                        .Append(": ")
+                        .Append(goods)
+                        .Append("/")
+                        .Append(PlayerResources.MaxPlanetGoodsPerPlanet)
+                        .AppendLine();
+                }
+            }
+
+            return planetBuilder.Length == 0 ? "No planet goods." : planetBuilder.ToString();
+        }
+
         if (playerPortfolio == null)
         {
             return "No portfolio connected.";
@@ -181,5 +279,15 @@ public class StockMarketUI : MonoBehaviour
         }
 
         return builder.Length == 0 ? "No holdings." : builder.ToString();
+    }
+
+    private PlayerResources ResolvePlayerResources()
+    {
+        if (playerResources != null)
+        {
+            return playerResources;
+        }
+
+        return playerPortfolio == null ? null : playerPortfolio.playerResources;
     }
 }
