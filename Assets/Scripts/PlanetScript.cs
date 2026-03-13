@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class PlanetScript : MonoBehaviour
 {
+    [SerializeField] private string planetSymbol;
     [SerializeField] private StockMarketUI stockMarketUI;
 
     private void OnTriggerEnter(Collider other)
@@ -11,7 +12,7 @@ public class PlanetScript : MonoBehaviour
             return;
         }
 
-        stockMarketUI.OpenPlanetShop();
+        stockMarketUI.OpenPlanetShop(planetSymbol);
     }
 
     private void OnTriggerExit(Collider other)

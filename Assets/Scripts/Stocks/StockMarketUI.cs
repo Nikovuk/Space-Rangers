@@ -27,6 +27,8 @@ public class StockMarketUI : MonoBehaviour
 
     private readonly List<StockMarketRowUI> rows = new List<StockMarketRowUI>();
     private bool planetTradeMode;
+    private string currentPlanetSymbol;
+    private const float PlanetSellMultiplier = 0.95f;
 
     private void OnEnable()
     {
@@ -82,9 +84,10 @@ public class StockMarketUI : MonoBehaviour
         }
     }
 
-    public void OpenPlanetShop()
+    public void OpenPlanetShop(string planetSymbol)
     {
         planetTradeMode = true;
+        currentPlanetSymbol = planetSymbol;
 
         if (stocksCornerPanel != null)
         {
@@ -107,6 +110,7 @@ public class StockMarketUI : MonoBehaviour
     public void ClosePlanetShop()
     {
         planetTradeMode = false;
+        currentPlanetSymbol = null;
 
         if (planetShopPanel != null)
         {
@@ -186,7 +190,14 @@ public class StockMarketUI : MonoBehaviour
             {
                 PlayerResources resources = ResolvePlayerResources();
                 int goods = resources == null ? 0 : resources.GetPlanetGoodsAmount(stock.symbol);
-                rows[i].SetData(stock.symbol + " " + stock.currentPrice.ToString("F2") + " | Cargo: " + goods + "/" + PlayerResources.MaxPlanetGoodsPerPlanet);
+                if (IsCurrentPlanetGood(stock.symbol))
+                {
+                    rows[i].SetData(stock.symbol + " " + stock.currentPrice.ToString("F2") + " | Cargo: " + goods + "/" + PlayerResources.MaxPlanetGoodsPerPlanet);
+                }
+                else
+                {
+                    rows[i].SetData(stock.symbol + " " + GetPlanetSellPrice(stock.currentPrice).ToString("F2") + " | Cargo: " + goods + "/" + PlayerResources.MaxPlanetGoodsPerPlanet);
+                }
             }
             else
             {
@@ -207,7 +218,7 @@ public class StockMarketUI : MonoBehaviour
         {
             PlayerResources resources = ResolvePlayerResources();
             Stock stock = marketManager.GetStock(symbol);
-            if (resources != null && stock != null)
+            if (resources != null && stock != null && IsCurrentPlanetGood(symbol))
             {
                 resources.TryBuyPlanetGoods(symbol, stock.currentPrice, 1);
                 Refresh();
@@ -234,9 +245,9 @@ public class StockMarketUI : MonoBehaviour
         {
             PlayerResources resources = ResolvePlayerResources();
             Stock stock = marketManager.GetStock(symbol);
-            if (resources != null && stock != null)
+            if (resources != null && stock != null && !IsCurrentPlanetGood(symbol))
             {
-                resources.TrySellPlanetGoods(symbol, stock.currentPrice, 1);
+                resources.TrySellPlanetGoods(symbol, GetPlanetSellPrice(stock.currentPrice), 1);
                 Refresh();
             }
 
@@ -301,7 +312,18 @@ public class StockMarketUI : MonoBehaviour
                 }
             }
 
-            return planetBuilder.Length == 0 ? "No planet goods." : planetBuilder.ToString();
+            if (planetBuilder.Length == 0)
+            {
+                return "No planet goods.";
+            }
+
+            if (!string.IsNullOrEmpty(currentPlanetSymbol))
+            {
+                planetBuilder.Append("Buy: ").Append(currentPlanetSymbol).AppendLine();
+                planetBuilder.Append("Sell: others @ x").Append(PlanetSellMultiplier.ToString("F2"));
+            }
+
+            return planetBuilder.ToString();
         }
 
         if (playerPortfolio == null)
@@ -325,6 +347,17 @@ public class StockMarketUI : MonoBehaviour
         }
 
         return builder.Length == 0 ? "No holdings." : builder.ToString();
+    }
+
+
+    private bool IsCurrentPlanetGood(string symbol)
+    {
+        return !string.IsNullOrEmpty(currentPlanetSymbol) && symbol == currentPlanetSymbol;
+    }
+
+    private float GetPlanetSellPrice(float currentPrice)
+    {
+        return currentPrice * PlanetSellMultiplier;
     }
 
     private PlayerResources ResolvePlayerResources()
