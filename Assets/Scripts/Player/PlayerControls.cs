@@ -46,6 +46,8 @@ public class PlayerControls : MonoBehaviour
 
     [Header("Links")]
     [SerializeField] TMP_Text itemDescription;
+    [SerializeField] GameObject stockShopPanel;
+    [SerializeField] StockMarketUI StockMarketUI;
     [SerializeField] PlayerResources playerResources;
     [SerializeField] Transform firePoint;
     [SerializeField] GameObject laserPrefab;
@@ -75,6 +77,14 @@ public class PlayerControls : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        LookInput.x = Input.mousePosition.x;
+        LookInput.y = Input.mousePosition.y;
+
+        MouseDist.x = (LookInput.x - ScreenCenter.x) / ScreenCenter.y;
+        MouseDist.y = (LookInput.y - ScreenCenter.y) / ScreenCenter.y;
+
+        MouseDist = Vector2.ClampMagnitude(MouseDist, 1f);
+
         float mouseMagnitude = MouseDist.magnitude;
         if (mouseMagnitude <= LookDeadZone)
         {
@@ -86,13 +96,6 @@ public class PlayerControls : MonoBehaviour
             MouseDist = MouseDist.normalized * Mathf.Clamp01(mappedMagnitude);
         }
 
-        LookInput.x = Input.mousePosition.x;
-        LookInput.y = Input.mousePosition.y;
-
-        MouseDist.x = (LookInput.x - ScreenCenter.x) / ScreenCenter.y;
-        MouseDist.y = (LookInput.y - ScreenCenter.y) / ScreenCenter.y;
-
-        MouseDist = Vector2.ClampMagnitude(MouseDist, 1f);
         transform.Rotate(-MouseDist.y * LookRotateSpeed * Time.deltaTime, MouseDist.x * LookRotateSpeed * Time.deltaTime, RollInput, Space.Self);
 
         //Двигало
@@ -130,6 +133,14 @@ public class PlayerControls : MonoBehaviour
         if (Input.GetKey(KeyCode.R) == true)
         {
             SceneManagerScript.reloadScene();
+        }
+
+        if (Input.GetKey(KeyCode.Tab) == true)
+        {
+            if (stockShopPanel.activeInHierarchy == true)
+                StockMarketUI.OpenStockShop();
+            else
+                StockMarketUI.CloseStockShop();
         }
 
 

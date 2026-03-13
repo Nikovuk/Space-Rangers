@@ -48,8 +48,8 @@ public class Inventory : MonoBehaviour
                 }
             }
         }
-        if (slots.Count > -size) return amount;
-        while (amount < item.itemData.max_stack)
+        if (slots.Count >= size) return amount;
+        while (amount > item.itemData.max_stack)
         {
             ItemInstance itm = new ItemInstance();
             itm.itemData = item.itemData;

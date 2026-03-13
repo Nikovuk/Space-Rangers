@@ -110,6 +110,11 @@ public class NpcShipRoute : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (!drawGizmos || !IsValid)
+        {
+            return;
+        }
+
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(pointA.position, 1.2f);
 
