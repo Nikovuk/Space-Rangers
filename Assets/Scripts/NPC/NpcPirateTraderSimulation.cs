@@ -15,7 +15,9 @@ public class NpcPirateTraderSimulation : MonoBehaviour
     [SerializeField] private float tickInterval = 1f;
 
     [Header("Interception")]
-    [SerializeField] private float interceptionDistance = 25f;
+    [SerializeField] private float laserMaxDistance = 25f;
+    [SerializeField] private float laserMinDistance = 10f;
+    [SerializeField] private float laserShotInterval = 0.35f;
     [SerializeField] private float pirateDps = 6f;
     [SerializeField] private float traderDps = 2f;
     [SerializeField] private float traderEscapeSeconds = 3f;
@@ -34,7 +36,7 @@ public class NpcPirateTraderSimulation : MonoBehaviour
             return;
         }
 
-        tickTimer = Mathf.Max(0.1f, tickInterval);
+        tickTimer = Mathf.Max(0.05f, Mathf.Min(tickInterval, laserShotInterval));
         RunInterceptions();
     }
 
@@ -48,8 +50,9 @@ public class NpcPirateTraderSimulation : MonoBehaviour
             return;
         }
 
-        float dpsStep = Mathf.Max(0.05f, tickInterval);
-        float maxSqrDistance = interceptionDistance * interceptionDistance;
+        float dpsStep = Mathf.Max(0.05f, laserShotInterval);
+        float maxSqrDistance = laserMaxDistance * laserMaxDistance;
+        float minSqrDistance = laserMinDistance * laserMinDistance;
 
         for (int i = 0; i < pirates.Length; i++)
         {
@@ -76,6 +79,13 @@ public class NpcPirateTraderSimulation : MonoBehaviour
                 float sqrDistance = (pirate.transform.position - trader.transform.position).sqrMagnitude;
                 if (sqrDistance > maxSqrDistance)
                 {
+                    continue;
+                }
+
+                if (sqrDistance < minSqrDistance)
+                {
+                    trader.TriggerEscape(traderEscapeSeconds);
+                    pirate.TriggerEscape(traderEscapeSeconds * 0.5f);
                     continue;
                 }
 

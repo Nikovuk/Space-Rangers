@@ -24,6 +24,14 @@ public class NpcPirateShip : MonoBehaviour
         }
     }
 
+    public void TriggerEscape(float duration)
+    {
+        if (patrol != null)
+        {
+            patrol.TriggerEscape(duration);
+        }
+    }
+
     public void ReturnToBase()
     {
         if (patrol == null)
