@@ -62,7 +62,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
       propertyPath: m_Name
-      value: NPCPirateShip
+      value: PlayerPirate
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -73,13 +73,16 @@ PrefabInstance:
       addedObject: {fileID: -7591659441764992353}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6739081248720638811}
+      addedObject: {fileID: -4254456707464748805}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3109503128313175802}
+      addedObject: {fileID: -5099093115235581070}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3782755783892278312}
+      addedObject: {fileID: -7831526702050720067}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 737249517492020744}
   m_SourcePrefab: {fileID: 100100000, guid: 6f66601e7241f2b4b912cc28752ea445, type: 3}
 --- !u!1 &8470776449735539295 stripped
 GameObject:
@@ -113,7 +116,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &6739081248720638811
+--- !u!114 &-4254456707464748805
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -138,7 +141,7 @@ MonoBehaviour:
   stockMarketManager: {fileID: 0}
   maxHull: 20
   escapeSpeedMultiplier: 1.25
---- !u!114 &3109503128313175802
+--- !u!114 &-5099093115235581070
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -150,8 +153,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 913dd1e6b88879d49a5979d76461b563, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  patrol: {fileID: 6739081248720638811}
---- !u!114 &3782755783892278312
+  patrol: {fileID: 0}
+--- !u!114 &-7831526702050720067
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -160,12 +163,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 8470776449735539295}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f96be483c1048c94883cf40106378a3d, type: 3}
+  m_Script: {fileID: 11500000, guid: 511f398d47587f249ba6f4566c20b54d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pirateBase: {fileID: 0}
-  routePointOffsetRadius: 40
-  moveSpeed: 18
-  turnSpeed: 4
-  arriveDistance: 6
-  routeSearchCooldown: 6
+  target: {fileID: 0}
+  speed: 18
+  attackDistance: 6
+  dps: 8
+--- !u!114 &737249517492020744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8470776449735539295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d937bd0c73b8804a81e1f6f0f3ace90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  popup: {fileID: 0}

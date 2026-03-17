@@ -8,6 +8,11 @@ public class LaserScript : MonoBehaviour
     public float pirateRetaliationDamage = 2f;
     public float traderRetaliationDamage = 1f;
 
+    public void Initialize(PlayerResources laserOwner)
+    {
+        owner = laserOwner;
+    }
+
     void Update()
     {
         transform.position += transform.forward * speed * Time.deltaTime;
@@ -41,7 +46,7 @@ public class LaserScript : MonoBehaviour
             return;
         }
 
-        NpcPirateShip pirate = other.GetComponent<NpcPirateShip>();
+        NpcPirateShip pirate = other.GetComponentInParent<NpcPirateShip>();
         if (pirate != null)
         {
             pirate.ReceiveDamage(damage);
@@ -52,7 +57,7 @@ public class LaserScript : MonoBehaviour
             return;
         }
 
-        NpcTraderShip trader = other.GetComponent<NpcTraderShip>();
+        NpcTraderShip trader = other.GetComponentInParent<NpcTraderShip>();
         if (trader != null)
         {
             trader.ReceiveDamage(damage);

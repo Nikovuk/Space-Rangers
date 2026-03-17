@@ -163,6 +163,21 @@ public class NpcShipPatrol : MonoBehaviour
 
         isDestroyed = true;
         Destroy(gameObject);
+
+        NpcPirateTraderSimulation simulation = FindObjectOfType<NpcPirateTraderSimulation>();
+        if (simulation != null)
+        {
+            if (GetComponent<NpcPirateShip>() != null)
+            {
+                simulation.NotifyPirateDestroyed();
+            }
+
+            if (GetComponent<NpcTraderShip>() != null)
+            {
+                simulation.NotifyTraderDestroyed(route);
+            }
+        }
+
     }
 
     public void SetRoute(NpcShipRoute newRoute, bool beginFromPointA)
@@ -176,6 +191,7 @@ public class NpcShipPatrol : MonoBehaviour
         PrepareLegDetour();
         hasCargo = true;
     }
+
     private void TryProcessTradeAtDestination()
     {
         if (stockMarketManager == null || route == null)

@@ -219,7 +219,7 @@ public class PlayerControls : MonoBehaviour
             LaserScript laserScript = laser.GetComponent<LaserScript>();
             if (laserScript != null)
             {
-                laserScript.owner = playerResources;
+                laserScript.Initialize(playerResources);
             }
         }
 

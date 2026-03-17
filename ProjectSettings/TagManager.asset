@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Asteroid
   - Laser
+  - NPC
   layers:
   - Default
   - TransparentFX

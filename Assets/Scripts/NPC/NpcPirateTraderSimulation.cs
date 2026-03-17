@@ -8,8 +8,8 @@ public class NpcPirateTraderSimulation : MonoBehaviour
 
     [Header("Pirate Stocks")]
     [SerializeField] private List<string> pirateStockSymbols = new List<string> { "PIR" };
-    [SerializeField] private float pirateStockRiseOnTraderDestroyed = 0.02f;
     [SerializeField] private float pirateStockDropOnPirateDestroyed = 0.03f;
+    [SerializeField] private float traderStockDropOnTraderDestroyed = 0.03f;
 
     [Header("Loop")]
     [SerializeField] private float tickInterval = 1f;
@@ -84,37 +84,52 @@ public class NpcPirateTraderSimulation : MonoBehaviour
                 pirate.ReceiveDamage(traderDps * dpsStep);
                 attacked++;
 
-                if (pirate == null || pirate.IsDestroyed)
-                {
-                    OnPirateDestroyed();
-                }
-
                 if (trader == null || trader.IsDestroyed)
                 {
-                    OnTraderDestroyed(pirate);
+                    if (pirate != null)
+                    {
+                        pirate.ReturnToBase();
+                    }
                 }
             }
         }
     }
 
-    private void OnTraderDestroyed(NpcPirateShip pirate)
+    public void NotifyTraderDestroyed(NpcShipRoute traderRoute)
     {
         if (planetEconomy != null)
         {
             planetEconomy.demandModifier -= Mathf.Abs(demandPenaltyPerDestroyedTrader);
         }
 
-        if (pirate != null)
+        if (traderRoute == null)
         {
-            pirate.ReturnToBase();
+            return;
         }
 
-        ApplyPirateStockImpact(Mathf.Abs(pirateStockRiseOnTraderDestroyed));
+        ApplyStockImpact(traderRoute.TraderCargoStockSymbol, -Mathf.Abs(traderStockDropOnTraderDestroyed));
     }
 
-    private void OnPirateDestroyed()
+    public void NotifyPirateDestroyed()
     {
         ApplyPirateStockImpact(-Mathf.Abs(pirateStockDropOnPirateDestroyed));
+    }
+
+    private void ApplyStockImpact(string symbol, float change)
+    {
+        if (stockMarketManager == null || string.IsNullOrWhiteSpace(symbol))
+        {
+            return;
+        }
+
+        Stock stock = stockMarketManager.GetStock(symbol);
+        if (stock == null)
+        {
+            return;
+        }
+
+        stock.SetPrice(stock.currentPrice * (1f + change));
+        stockMarketManager.UpdatePrices();
     }
 
     private void ApplyPirateStockImpact(float change)
@@ -126,15 +141,7 @@ public class NpcPirateTraderSimulation : MonoBehaviour
 
         for (int i = 0; i < pirateStockSymbols.Count; i++)
         {
-            Stock stock = stockMarketManager.GetStock(pirateStockSymbols[i]);
-            if (stock == null)
-            {
-                continue;
-            }
-
-            stock.SetPrice(stock.currentPrice * (1f + change));
+            ApplyStockImpact(pirateStockSymbols[i], change);
         }
-
-        stockMarketManager.UpdatePrices();
     }
 }

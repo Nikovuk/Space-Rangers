@@ -9,6 +9,8 @@ public class NpcShipRoute : MonoBehaviour
     [SerializeField] private List<Transform> areaPoints = new List<Transform>();
     [SerializeField] private string pointAStockSymbol;
     [SerializeField] private string pointBStockSymbol;
+    [SerializeField] private string traderCargoStockSymbol;
+
 
     [Header("Per Route Spawn Settings")]
     [Range(10f, 40f)]
@@ -27,6 +29,7 @@ public class NpcShipRoute : MonoBehaviour
     public Transform PointB => pointB;
     public string PointAStockSymbol => pointAStockSymbol;
     public string PointBStockSymbol => pointBStockSymbol;
+    public string TraderCargoStockSymbol => traderCargoStockSymbol;
 
 
     public bool IsValid => pointA != null && pointB != null;
