@@ -8,9 +8,22 @@ public class LaserScript : MonoBehaviour
     public float pirateRetaliationDamage = 2f;
     public float traderRetaliationDamage = 1f;
 
+    private bool npcShot;
+    private float npcShipDamage;
+    private float npcPlayerDamage;
+
     public void Initialize(PlayerResources laserOwner)
     {
         owner = laserOwner;
+        npcShot = false;
+    }
+
+    public void InitializeNpcShot(float shipDamage, float playerDamage)
+    {
+        owner = null;
+        npcShot = true;
+        npcShipDamage = Mathf.Max(0f, shipDamage);
+        npcPlayerDamage = Mathf.Max(0f, playerDamage);
     }
 
     void Update()
@@ -22,35 +35,60 @@ public class LaserScript : MonoBehaviour
     {
         ProcessHit(other.gameObject);
         Debug.Log("LaserCollided");
-        if (other.CompareTag("Player")) return;
-        else
-            Destroy(gameObject);
+
+        if (other.CompareTag("Player") && !npcShot)
+        {
+            return;
+        }
+
+        Destroy(gameObject);
     }
+
     private void OnCollisionEnter(Collision collision)
     {
         ProcessHit(collision.gameObject);
         Debug.Log("LaserCollided");
-        if (collision.gameObject.CompareTag("Player")) return;
-        else
-            Destroy(gameObject);
+
+        if (collision.gameObject.CompareTag("Player") && !npcShot)
+        {
+            return;
+        }
+
+        Destroy(gameObject);
     }
 
     void ProcessHit(GameObject other)
     {
-        if (other.CompareTag("Player")) return;
+        if (other.CompareTag("Player"))
+        {
+            if (!npcShot)
+            {
+                return;
+            }
+
+            PlayerResources player = other.GetComponent<PlayerResources>();
+            if (player != null)
+            {
+                player.ReceiveDamage(npcPlayerDamage);
+            }
+
+            return;
+        }
 
         var asteroid = other.GetComponent<AsteroidScript>();
         if (asteroid != null)
         {
-            asteroid.TakeDamage(damage);
+            asteroid.TakeDamage(npcShot ? Mathf.Max(1, Mathf.RoundToInt(npcShipDamage)) : damage);
             return;
         }
+
+        float hitDamage = npcShot ? npcShipDamage : damage;
 
         NpcPirateShip pirate = other.GetComponentInParent<NpcPirateShip>();
         if (pirate != null)
         {
-            pirate.ReceiveDamage(damage);
-            if (owner != null)
+            pirate.ReceiveDamage(hitDamage);
+            if (!npcShot && owner != null)
             {
                 owner.ReceiveDamage(pirateRetaliationDamage);
             }
@@ -60,14 +98,12 @@ public class LaserScript : MonoBehaviour
         NpcTraderShip trader = other.GetComponentInParent<NpcTraderShip>();
         if (trader != null)
         {
-            trader.ReceiveDamage(damage);
-            if (owner != null)
+            trader.ReceiveDamage(hitDamage);
+            if (!npcShot && owner != null)
             {
                 owner.ReceiveDamage(traderRetaliationDamage);
             }
             return;
         }
-
-        Destroy(gameObject);
     }
 }

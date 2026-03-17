@@ -15,11 +15,14 @@ public class NpcPirateTraderSimulation : MonoBehaviour
     [SerializeField] private float tickInterval = 1f;
 
     [Header("Interception")]
-    [SerializeField] private float interceptionDistance = 25f;
+    [SerializeField] private float laserMaxDistance = 25f;
+    [SerializeField] private float laserMinDistance = 10f;
+    [SerializeField] private float laserShotInterval = 0.35f;
     [SerializeField] private float pirateDps = 6f;
     [SerializeField] private float traderDps = 2f;
     [SerializeField] private float traderEscapeSeconds = 3f;
     [SerializeField] private int maxTradersPerPirateTick = 1;
+    [SerializeField] private GameObject laserPrefab;
 
     [Header("Economy Impact")]
     [SerializeField] private float demandPenaltyPerDestroyedTrader = 0.01f;
@@ -34,7 +37,7 @@ public class NpcPirateTraderSimulation : MonoBehaviour
             return;
         }
 
-        tickTimer = Mathf.Max(0.1f, tickInterval);
+        tickTimer = Mathf.Max(0.05f, Mathf.Min(tickInterval, laserShotInterval));
         RunInterceptions();
     }
 
@@ -48,8 +51,9 @@ public class NpcPirateTraderSimulation : MonoBehaviour
             return;
         }
 
-        float dpsStep = Mathf.Max(0.05f, tickInterval);
-        float maxSqrDistance = interceptionDistance * interceptionDistance;
+        float dpsStep = Mathf.Max(0.05f, laserShotInterval);
+        float maxSqrDistance = laserMaxDistance * laserMaxDistance;
+        float minSqrDistance = laserMinDistance * laserMinDistance;
 
         for (int i = 0; i < pirates.Length; i++)
         {
@@ -79,19 +83,45 @@ public class NpcPirateTraderSimulation : MonoBehaviour
                     continue;
                 }
 
+                if (sqrDistance < minSqrDistance)
+                {
+                    trader.TriggerEscape(traderEscapeSeconds);
+                    pirate.TriggerEscape(traderEscapeSeconds * 0.5f);
+                    continue;
+                }
+
                 trader.TriggerEscape(traderEscapeSeconds);
-                trader.ReceiveDamage(pirateDps * dpsStep);
-                pirate.ReceiveDamage(traderDps * dpsStep);
+                ShootLaser(pirate.transform, trader.transform.position, pirateDps * dpsStep);
+                ShootLaser(trader.transform, pirate.transform.position, traderDps * dpsStep);
                 attacked++;
 
                 if (trader == null || trader.IsDestroyed)
                 {
-                    if (pirate != null)
-                    {
-                        pirate.ReturnToBase();
-                    }
+                    pirate.ReturnToBase();
                 }
             }
+        }
+    }
+
+    private void ShootLaser(Transform shooter, Vector3 targetPosition, float shipDamage)
+    {
+        if (laserPrefab == null || shooter == null)
+        {
+            return;
+        }
+
+        Vector3 spawnPosition = shooter.position + shooter.forward * 2f;
+        Vector3 direction = (targetPosition - spawnPosition).normalized;
+        if (direction.sqrMagnitude < 0.0001f)
+        {
+            direction = shooter.forward;
+        }
+
+        GameObject laser = Instantiate(laserPrefab, spawnPosition, Quaternion.LookRotation(direction, Vector3.up));
+        LaserScript laserScript = laser.GetComponent<LaserScript>();
+        if (laserScript != null)
+        {
+            laserScript.InitializeNpcShot(shipDamage, 0f);
         }
     }
 

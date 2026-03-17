@@ -7,6 +7,7 @@ public class NpcPirateWaveTriggerSpawner : MonoBehaviour
     [SerializeField] private int piratesPerWave = 3;
     [SerializeField] private float spawnRadius = 10f;
     [SerializeField] private PirateStockDropPopup stockDropPopup;
+    [SerializeField] private GameObject laserPrefab;
 
     private bool spawned;
 
@@ -46,6 +47,7 @@ public class NpcPirateWaveTriggerSpawner : MonoBehaviour
             }
 
             attacker.SetTarget(target);
+            attacker.SetLaserPrefab(laserPrefab);
 
             TriggeredPirateDeathNotifier notifier = patrol.GetComponent<TriggeredPirateDeathNotifier>();
             if (notifier == null)
