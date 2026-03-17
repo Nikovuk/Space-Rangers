@@ -22,6 +22,7 @@ public class NpcPirateTraderSimulation : MonoBehaviour
     [SerializeField] private float traderDps = 2f;
     [SerializeField] private float traderEscapeSeconds = 3f;
     [SerializeField] private int maxTradersPerPirateTick = 1;
+    [SerializeField] private GameObject laserPrefab;
 
     [Header("Economy Impact")]
     [SerializeField] private float demandPenaltyPerDestroyedTrader = 0.01f;
@@ -90,18 +91,37 @@ public class NpcPirateTraderSimulation : MonoBehaviour
                 }
 
                 trader.TriggerEscape(traderEscapeSeconds);
-                trader.ReceiveDamage(pirateDps * dpsStep);
-                pirate.ReceiveDamage(traderDps * dpsStep);
+                ShootLaser(pirate.transform, trader.transform.position, pirateDps * dpsStep);
+                ShootLaser(trader.transform, pirate.transform.position, traderDps * dpsStep);
                 attacked++;
 
                 if (trader == null || trader.IsDestroyed)
                 {
-                    if (pirate != null)
-                    {
-                        pirate.ReturnToBase();
-                    }
+                    pirate.ReturnToBase();
                 }
             }
+        }
+    }
+
+    private void ShootLaser(Transform shooter, Vector3 targetPosition, float shipDamage)
+    {
+        if (laserPrefab == null || shooter == null)
+        {
+            return;
+        }
+
+        Vector3 spawnPosition = shooter.position + shooter.forward * 2f;
+        Vector3 direction = (targetPosition - spawnPosition).normalized;
+        if (direction.sqrMagnitude < 0.0001f)
+        {
+            direction = shooter.forward;
+        }
+
+        GameObject laser = Instantiate(laserPrefab, spawnPosition, Quaternion.LookRotation(direction, Vector3.up));
+        LaserScript laserScript = laser.GetComponent<LaserScript>();
+        if (laserScript != null)
+        {
+            laserScript.InitializeNpcShot(shipDamage, 0f);
         }
     }
 
