@@ -7,6 +7,7 @@ public class TriggeredPirateAttacker : MonoBehaviour
     [SerializeField] private float speed = 18f;
     [SerializeField] private float laserRange = 24f;
     [SerializeField] private float keepDistance = 14f;
+    [SerializeField] private float distanceTolerance = 2f;
     [SerializeField] private float laserCooldown = 0.25f;
     [SerializeField] private float laserDamage = 2f;
     [SerializeField] private GameObject laserPrefab;
@@ -36,8 +37,24 @@ public class TriggeredPirateAttacker : MonoBehaviour
         if (distance > 0.01f)
         {
             Vector3 direction = toTarget / distance;
-            float moveDirection = distance < keepDistance ? -1f : 1f;
-            transform.position += direction * moveDirection * speed * Time.deltaTime;
+            float minDistance = Mathf.Max(0.1f, keepDistance - Mathf.Abs(distanceTolerance));
+            float maxDistance = keepDistance + Mathf.Abs(distanceTolerance);
+            float moveDirection = 0f;
+
+            if (distance < minDistance)
+            {
+                moveDirection = -1f;
+            }
+            else if (distance > maxDistance)
+            {
+                moveDirection = 1f;
+            }
+
+            if (moveDirection != 0f)
+            {
+                transform.position += direction * moveDirection * speed * Time.deltaTime;
+            }
+
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 6f * Time.deltaTime);
         }
 
