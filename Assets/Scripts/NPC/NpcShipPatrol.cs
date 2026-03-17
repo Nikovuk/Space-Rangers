@@ -162,6 +162,21 @@ public class NpcShipPatrol : MonoBehaviour
         }
 
         isDestroyed = true;
+
+        NpcPirateTraderSimulation simulation = FindObjectOfType<NpcPirateTraderSimulation>();
+        if (simulation != null)
+        {
+            if (GetComponent<NpcPirateShip>() != null)
+            {
+                simulation.NotifyPirateDestroyed();
+            }
+
+            if (GetComponent<NpcTraderShip>() != null)
+            {
+                simulation.NotifyTraderDestroyed(route);
+            }
+        }
+
         Destroy(gameObject);
     }
 
